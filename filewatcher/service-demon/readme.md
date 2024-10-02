@@ -23,7 +23,7 @@ done
 ```
 
 
-chmod +x /path/to/print_prn_files.sh
+chmod +x /home/rakesh/barcode-printer-app/filewatcher/service-demon/bashscript.sh
 
 ## Setup cron job
 ```
@@ -31,5 +31,5 @@ crontab -e
 ```
 
 ```
-* * * * * /path/to/print_prn_files.sh
+* * * * * /home/rakesh/barcode-printer-app/filewatcher/service-demon/bashscript.sh
 ```

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory to monitor
-MONITOR_DIR="/path/to/your/folder"
+MONITOR_DIR="/home/rakesh/prnFile"
 
 # Printer name
 PRINTER_NAME="Bar-Code-Printer-TT065-50"
