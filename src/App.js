@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 function App() {
   const [device, setDevice] = useState(null);
   const [isWebUsbSupported, setIsWebUsbSupported] = useState(true);
+  const [zplCode, setZplCode] = useState("");
 
   useEffect(() => {
     if (!('usb' in navigator)) {
@@ -10,33 +11,6 @@ function App() {
       setIsWebUsbSupported(false);
     }
   }, []);
-
-  const printValues = [
-    {
-      company: "LOGIC TRADERS",
-      itemName: "Item1",
-      barcode: "12345",
-      noOfCopies: 4,
-    },
-    {
-      company: "LOGIC TRADERS",
-      itemName: "Item1",
-      barcode: "12345",
-      noOfCopies: 4,
-    },
-    {
-      company: "LOGIC TRADERS",
-      itemName: "Item1",
-      barcode: "12345",
-      noOfCopies: 4,
-    },
-    {
-      company: "LOGIC TRADERS",
-      itemName: "Item1",
-      barcode: "12345",
-      noOfCopies: 4,
-    },
-  ];
 
   const requestDevice = async () => {
     try {
@@ -47,16 +21,15 @@ function App() {
     }
   };
 
-  const testPrint = async (device) => {
-    const cmds = [
-      'SIZE 48 mm,25 mm',
-      'CLS',
-      `TEXT 30,10,"4",0,1,1,"${printValues[0].company}"`,
-      `TEXT 30,50,"2",0,1,1,"${printValues[0].itemName}"`,
-      `BARCODE 30,80,"128",70,1,0,2,2,"${printValues[0].barcode}"`,
-      'PRINT 1',
-      'END',
-    ];
+  const handleZplCodeChange = (event) => {
+    setZplCode(event.target.value);
+  };
+
+  const printZplCode = async (device) => {
+    if (!zplCode) {
+      console.error("No ZPL code to print");
+      return;
+    }
 
     try {
       await device.open();
@@ -64,7 +37,7 @@ function App() {
       await device.claimInterface(0);
       await device.transferOut(
         device.configuration.interfaces[0].alternate.endpoints.find(obj => obj.direction === 'out').endpointNumber,
-        new Uint8Array(new TextEncoder().encode(cmds.join('\r\n')))
+        new Uint8Array(new TextEncoder().encode(zplCode))
       );
       await device.close();
     } catch (e) {
@@ -80,9 +53,18 @@ function App() {
         <>
           <button onClick={requestDevice}>Request Device</button>
           {device && (
-            <button onClick={() => testPrint(device)}>
-              Print with '{device.productName}'
-            </button>
+            <>
+              <textarea
+                value={zplCode}
+                onChange={handleZplCodeChange}
+                placeholder="Enter ZPL code here"
+                rows="10"
+                cols="50"
+              />
+              <button onClick={() => printZplCode(device)}>
+                Print with '{device.productName}'
+              </button>
+            </>
           )}
         </>
       )}
