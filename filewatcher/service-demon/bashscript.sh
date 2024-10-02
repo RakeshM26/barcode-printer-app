@@ -13,6 +13,6 @@ for file in "$MONITOR_DIR"/*.prn; do
     lp -d "$PRINTER_NAME" -o raw "$file"
     # Optionally, move the file to a processed directory or delete it
     # mv "$file" /path/to/processed/folder/
-    # rm "$file"
+    rm "$file"
   fi
 done
