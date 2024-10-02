@@ -1,7 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
   const [device, setDevice] = useState(null);
+  const [isWebUsbSupported, setIsWebUsbSupported] = useState(true);
+
+  useEffect(() => {
+    if (!('usb' in navigator)) {
+      console.log('WebUSB API is not supported!');
+      setIsWebUsbSupported(false);
+    }
+  }, []);
 
   const printValues = [
     {
@@ -67,11 +75,16 @@ function App() {
   return (
     <div>
       <h1>Barcode Printer App</h1>
-      <button onClick={requestDevice}>Request Device</button>
-      {device && (
-        <button onClick={() => testPrint(device)}>
-          Print with '{device.productName}'
-        </button>
+      {!isWebUsbSupported && <p>WebUSB API is not supported in this browser.</p>}
+      {isWebUsbSupported && (
+        <>
+          <button onClick={requestDevice}>Request Device</button>
+          {device && (
+            <button onClick={() => testPrint(device)}>
+              Print with '{device.productName}'
+            </button>
+          )}
+        </>
       )}
     </div>
   );
