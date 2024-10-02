@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import printJS from "print-js";
+import JSZip from 'jszip';
 
 function App() {
   const [isWebUsbSupported, setIsWebUsbSupported] = useState(true);
@@ -24,11 +25,21 @@ function App() {
     `;
 
     const handlePrint = () => {
-      printJS({
-        printable: zplCode,
-        type: 'raw',
-        header: null,
-        footer: null,
+      const zip = new JSZip();
+      zip.file("label.zpl", zplCode);
+
+      zip.generateAsync({ type: "blob" }).then(blob => {
+        const url = URL.createObjectURL(blob);
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = url;
+        document.body.appendChild(iframe);
+
+        iframe.onload = () => {
+          iframe.contentWindow.print();
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        };
       });
     };
 
@@ -38,6 +49,8 @@ function App() {
       </div>
     );
   };
+
+  
 
   return (
     <div>
