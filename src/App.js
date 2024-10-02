@@ -50,6 +50,46 @@ function App() {
     );
   };
 
+  import printJS from 'printjs';
+import JSZip from 'jszip';
+
+function ZplPrinter() {
+  const zplCode = `
+    ^XA
+    ^LL0500
+    ^LS0
+    ^FO10,10
+    ^A0,20,20
+    N
+    ^FS
+    ^XZ
+  `;
+
+  const handlePrint = () => {
+    const zip = new JSZip();
+    zip.file("label.prn", zplCode);
+
+    zip.generateAsync({ type: "blob" }).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = `data:application/zip;base64,${btoa(url)}`;
+      document.body.appendChild(iframe);
+
+      iframe.onload = () => {
+        iframe.contentWindow.print();
+        document.body.removeChild(iframe);
+        URL.revokeObjectURL(url);
+      };
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handlePrint}>Print ZPL</button>
+    </div>
+  );
+}
   
 
   return (
