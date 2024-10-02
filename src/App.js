@@ -1,8 +1,8 @@
-import React from "react";
-import { saveAs } from "file-saver";
-import qz from "qz-tray";
+import React, { useState } from "react";
 
 function App() {
+  const [device, setDevice] = useState(null);
+
   const printValues = [
     {
       company: "LOGIC TRADERS",
@@ -30,49 +30,49 @@ function App() {
     },
   ];
 
-  const generatePRN = (printData) => {
-    let prnData = "^XA\n";
-    printData.forEach(({ company, itemName, barcode, noOfCopies }) => {
-      for (let i = 0; i < noOfCopies; i++) {
-        prnData += `^FO5,5^A0N,20,20^FD${company}^FS\n`;
-        prnData += `^FO5,30^A0N,20,20^FD${itemName}^FS\n`;
-        prnData += `^FO5,60^BY1,2,40^BC^FD${barcode}^FS\n`;
-        prnData += "^XZ\n";
-      }
-    });
-    return prnData;
-  };
-
-  const savePRN = () => {
-    const prnContent = generatePRN(printValues);
-    const blob = new Blob([prnContent], { type: "text/plain;charset=utf-8" });
-    saveAs(blob, "barcode-labels.prn");
-  };
-
-  const printWithQZTray = async () => {
+  const requestDevice = async () => {
     try {
-      await qz.api.setCertificatePromise((resolve, reject) => {
-        resolve(); // Accept any certificate
-      });
-      await qz.api.setSignaturePromise((resolve, reject) => {
-        resolve(); // Sign requests (optional)
-      });
-      await qz.websocket.connect();
-      const config = qz.configs.create("Bar-Code-Printer-TT065-50");
-      const prnContent = generatePRN(printValues);
-      await qz.print(config, [{ data: prnContent }]);
-    } catch (error) {
-      console.error("Error with QZ Tray:", error);
-    } finally {
-      qz.websocket.disconnect();
+      const device = await navigator.usb.requestDevice({ filters: [] });
+      setDevice(device);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const testPrint = async (device) => {
+    const cmds = [
+      'SIZE 48 mm,25 mm',
+      'CLS',
+      `TEXT 30,10,"4",0,1,1,"${printValues[0].company}"`,
+      `TEXT 30,50,"2",0,1,1,"${printValues[0].itemName}"`,
+      `BARCODE 30,80,"128",70,1,0,2,2,"${printValues[0].barcode}"`,
+      'PRINT 1',
+      'END',
+    ];
+
+    try {
+      await device.open();
+      await device.selectConfiguration(1);
+      await device.claimInterface(0);
+      await device.transferOut(
+        device.configuration.interfaces[0].alternate.endpoints.find(obj => obj.direction === 'out').endpointNumber,
+        new Uint8Array(new TextEncoder().encode(cmds.join('\r\n')))
+      );
+      await device.close();
+    } catch (e) {
+      console.error(e);
     }
   };
 
   return (
     <div>
       <h1>Barcode Printer App</h1>
-      <button onClick={savePRN}>Save PRN File</button>
-      <button onClick={printWithQZTray}>Print with QZ Tray</button>
+      <button onClick={requestDevice}>Request Device</button>
+      {device && (
+        <button onClick={() => testPrint(device)}>
+          Print with '{device.productName}'
+        </button>
+      )}
     </div>
   );
 }
